@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Portfolio</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 800px;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            padding: 10px;
+            text-align: center;
+            border: 1px solid #ccc;
+        }
+
+        th {
+            background-color: #f4f4f4;
+        }
+
+        input[type="number"] {
+            width: 80px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Stock Portfolio</h1>
+        <table>
+            <thead>
+                <tr>
+                    <th>Stock Name</th>
+                    <th>LTP</th>
+                    <th>Buying Price</th>
+                    <th>Quantity</th>
+                    <th>Buying Value</th>
+                    <th>Current Value</th>
+                    <th>Profit/Loss</th>
+                </tr>
+            </thead>
+            <tbody id="stocks"></tbody>
+        </table>
+    </div>
+
+    <script>
+        const tickers = {
+            t1: "IREDA",
+            t2: "POLYCAB",
+            t3: "SUTLEJTEX",
+            t4: "CDSL",
+            t5: "RECLTD",
+        };
+
+        async function fetchStockPrices() {
+            try {
+                const response = await fetch('http://localhost:6969/api/stockprice');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                const data = await response.json();
+                return data.stockPrices;
+            } catch (error) {
+                console.error("Error fetching stock prices:", error);
+                return {};
+            }
+        }
+
+        function calculateValues(stockPrice, buyingPrice, quantity) {
+            const buyingValue = buyingPrice * quantity;
+            const currentValue = stockPrice * quantity;
+            const profitLoss = currentValue - buyingValue;
+            return { buyingValue, currentValue, profitLoss };
+        }
+
+        function createTableRow(stockSymbol, stockPrice) {
+            const row = document.createElement('tr');
+
+            const stockSymbolCell = document.createElement('td');
+            stockSymbolCell.textContent = stockSymbol;
+
+            const stockPriceCell = document.createElement('td');
+            stockPriceCell.textContent = `₹${stockPrice.toFixed(2)}`;
+
+            const buyingPriceInput = document.createElement('input');
+            buyingPriceInput.type = 'number';
+            buyingPriceInput.min = 0;
+            buyingPriceInput.value = 0;
+
+            const quantityInput = document.createElement('input');
+            quantityInput.type = 'number';
+            quantityInput.min = 0;
+            quantityInput.value = 0;
+
+            const buyingPriceCell = document.createElement('td');
+            buyingPriceCell.appendChild(buyingPriceInput);
+
+            const quantityCell = document.createElement('td');
+            quantityCell.appendChild(quantityInput);
+
+            const buyingValueCell = document.createElement('td');
+            const currentValueCell = document.createElement('td');
+            const profitLossCell = document.createElement('td');
+
+            function updateValues() {
+                const buyingPrice = parseFloat(buyingPriceInput.value);
+                const quantity = parseFloat(quantityInput.value);
+                const { buyingValue, currentValue, profitLoss } = calculateValues(stockPrice, buyingPrice, quantity);
+
+                buyingValueCell.textContent = `₹${buyingValue.toFixed(2)}`;
+                currentValueCell.textContent = `₹${currentValue.toFixed(2)}`;
+                profitLossCell.textContent = `₹${profitLoss.toFixed(2)}`;
+                profitLossCell.style.color = profitLoss >= 0 ? 'green' : 'red';
+            }
+
+            buyingPriceInput.addEventListener('input', updateValues);
+            quantityInput.addEventListener('input', updateValues);
+
+            row.appendChild(stockSymbolCell);
+            row.appendChild(stockPriceCell);
+            row.appendChild(buyingPriceCell);
+            row.appendChild(quantityCell);
+            row.appendChild(buyingValueCell);
+            row.appendChild(currentValueCell);
+            row.appendChild(profitLossCell);
+
+            return row;
+        }
+
+        function updateStockPrices() {
+            fetchStockPrices().then(stockPrices => {
+                const stocksDiv = document.getElementById('stocks');
+                stocksDiv.innerHTML = ''; // Clear the current content
+
+                for (const key in stockPrices) {
+                    if (stockPrices.hasOwnProperty(key)) {
+                        const stockSymbol = tickers[key];
+                        const stockPrice = stockPrices[key];
+
+                        const row = createTableRow(stockSymbol, stockPrice);
+                        stocksDiv.appendChild(row);
+                    }
+                }
+            });
+        }
+
+        setInterval(updateStockPrices, 10 * 1000); // Update every 10 seconds
+        updateStockPrices(); // Initial call to display the prices immediately
+    </script>
+</body>
+
+</html>

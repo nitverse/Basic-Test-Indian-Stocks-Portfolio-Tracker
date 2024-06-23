@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "cheerio": "^1.0.0-rc.12",
+    "cors": "^2.8.5",
     "express": "^4.19.2",
     "fyers-api-v3": "^1.2.1",
     "jsdom": "^24.1.0"

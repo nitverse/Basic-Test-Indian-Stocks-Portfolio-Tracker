@@ -1,9 +1,9 @@
 import express from "express";
 import { JSDOM } from "jsdom";
-
+import cors from 'cors'
 const app = express();
 const port = 6969;
-
+app.use(cors());
 const tickers = {
   t1: "IREDA",
   t2: "POLYCAB",
@@ -30,6 +30,7 @@ async function fetchStockPrice(ticker) {
     const document = dom.window.document;
 
     const stockPriceElement = document.querySelector(".YMlKec.fxKbKc");
+
     if (!stockPriceElement) {
       throw new Error(`Stock price element not found for ${ticker}`);
     }
@@ -65,7 +66,7 @@ async function updateStockPrices() {
 updateStockPrices();
 setInterval(updateStockPrices, 10 * 1000);
 
-app.get("/", (req, res) => {
+app.get("/api/stockprice", (req, res) => {
   res.json({ stockPrices });
 });
 
